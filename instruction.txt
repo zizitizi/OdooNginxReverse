@@ -1,0 +1,3 @@
+install odoo 16 instance on port 8069
+add systemd unit to add odoo as linux service and enable it to automatic start service on system startup
+
