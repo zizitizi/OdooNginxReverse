@@ -16,5 +16,25 @@ netrpc_interface = 127.0.0.1
 systemctl restart odoo
 
 
+As the NGINX is installed and the binding interface is changed let's now move on to configuring it in the next section.
+
+Configure NGINX
+
+- Initially edit the current Nginx server block in the old domain or create a new server block if it is not created yet.
+
+- Now add the following lines of code to configure NGINX:
+
+Cd /etc/nginx/sites-enabled
+
+Create a Nginx Server Block for your Domain:
+nano /etc/nginx/sites-available/thisdomain.com
+
+
+
+
+
+
+
+
 
 
