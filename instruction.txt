@@ -5,4 +5,16 @@ enable enginx to automatic startup :sudo systemctl enable nginx
 start service with : sudo service nginx start, check service status with sudo service nginx status
 
 
+- Although this step is optional, it is a good security practice. Moreover, by default Odoo server listens to port 8069 on all interfaces, so if you want to disable the direct access to your Odoo instance,  open the Odoo configuration and add the following two lines of command at the end of the file:
+
+/etc/odoo.conf
+
+xmlrpc_interface = 127.0.0.1
+netrpc_interface = 127.0.0.1
+- Now save the configuration file and restart the Odoo server for the changes to take effect using the following code:
+
+systemctl restart odoo
+
+
+
 
