@@ -31,7 +31,38 @@ nano /etc/nginx/sites-available/thisdomain.com
 
 
 
-
+server {
+    server_name testing.com 111.111.111.111; //replace ip and server name with your domain and ip
+    listen 80;
+    access_log /var/log/nginx/testing-access.log;
+    error_log /var/log/nginx/testing-error.log;
+    location /longpolling {
+        proxy_connect_timeout   3600;
+        proxy_read_timeout      3600;
+        proxy_send_timeout      3600;
+        send_timeout            3600;
+        proxy_pass http://127.0.0.1:8072;
+}
+    location / {
+        proxy_connect_timeout   3600;
+        proxy_read_timeout      3600;
+        proxy_send_timeout      3600;
+        send_timeout            3600;
+        proxy_pass http://127.0.0.1:8069/;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+    gzip on;
+    gzip_min_length 1000;
+}
+upstream odoo {
+server 127.0.0.1:8069 weight=1 fail_timeout=0;
+}
+upstream odoo-im {
+server 127.0.0.1:8072 weight=1 fail_timeout=0;
+}
 
 
 
