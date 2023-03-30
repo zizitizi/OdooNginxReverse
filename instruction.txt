@@ -1,3 +1,8 @@
+Following the below-mentioned steps will help you to easily configure the Odoo platform with Nginx as Reverse Proxy
+
+
+
+
 install odoo 16 instance on port 8069
 add systemd unit to add odoo as linux service and enable it to automatic start service on system startup
 install nginx on system
@@ -24,7 +29,7 @@ Configure NGINX
 
 - Now add the following lines of code to configure NGINX:
 
-Cd /etc/nginx/sites-enabled
+cd /etc/nginx/sites-enabled
 
 Create a Nginx Server Block for your Domain:
 nano /etc/nginx/sites-available/thisdomain.com
@@ -64,6 +69,10 @@ upstream odoo-im {
 server 127.0.0.1:8072 weight=1 fail_timeout=0;
 }
 
+
+
+systemctl restart odoo
+service nginx restart
 
 
 
