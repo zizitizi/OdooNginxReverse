@@ -37,7 +37,7 @@ nano /etc/nginx/sites-available/thisdomain.com
 
 
 server {
-    server_name testing.com 111.111.111.111; //replace ip and server name with your domain and ip
+    server_name testing.com 111.111.111.111;
     listen 80;
     access_log /var/log/nginx/testing-access.log;
     error_log /var/log/nginx/testing-error.log;
