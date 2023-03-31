@@ -23,11 +23,15 @@ systemctl restart odoo
 
 As the NGINX is installed and the binding interface is changed let's now move on to configuring it in the next section.
 
-Configure NGINX
+## Configure NGINX
 
 - Initially edit the current Nginx server block in the old domain or create a new server block if it is not created yet.
 
+### do one of below option:
+
 - Now add the following lines of code to configure NGINX:
+
+#### option1:
 
 cd /etc/nginx/sites-enabled
 
@@ -68,6 +72,58 @@ server 127.0.0.1:8069 weight=1 fail_timeout=0;
 upstream odoo-im {
 server 127.0.0.1:8072 weight=1 fail_timeout=0;
 }
+
+
+
+#### option2:
+nano /etc/nginx/sites-available/thisdomain.com
+
+This command will open up the configuration file. Enter the configuration information as below.
+
+upstream odoo {
+   server 127.0.0.1:8069;
+}
+
+server {
+   listen 80 default;
+   server_name thisdomain.com;
+
+   access_log /var/log/nginx/odoo.com.access.log;
+   error_log /var/log/nginx/odoo.com.error.log;
+
+   proxy_buffers 16 64k;
+   proxy_buffer_size 128k;
+
+   location / {
+      proxy_pass http://odoo;
+      proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+      proxy_redirect off;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto https;
+   }
+
+   location ~* /web/static/ {
+      proxy_cache_valid 200 60m;
+      proxy_buffering on;
+      expires 864000;
+      proxy_pass http://odoo;
+   }
+}
+Save the file and exit the editor.
+
+Step 5: Restart the Nginx Web Server
+Restart the web server for the changes you've made above to take effect. Use the following command to restart Nginx.
+
+sudo systemctl restart nginx
+Congratulations! You can now be able to access your Odoo instance by typing your domain and in the web browser. This example works with the following address.
+
+http://thisdomain.com
+
+
+
 
 
 
