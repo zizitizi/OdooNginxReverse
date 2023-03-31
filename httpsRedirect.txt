@@ -1,1 +1,107 @@
+# Using Let’s Encrypt SSL Certificate for Odoo on Nginx
 
+Install certbot tool:
+
+sudo apt-get update
+sudo apt-get install certbot
+
+Get Let’s Encrypt SSL certificates for your domain.
+
+# Stop nginx service
+sudo systemctl stop nginx
+
+# Save domain and email address as variables
+export DOMAIN="erp.computingforgeeks.com"
+export EMAIL="myemail@computingforgeeks.com"
+
+# Request Let's Encrypt SSL Certificate
+sudo /usr/bin/certbot certonly --standalone -d ${DOMAIN} --preferred-challenges http --agree-tos -n -m ${EMAIL} --keep-until-expiring
+If the execution went through, paths to the certificate and chain files will be printed out.
+
+If the execution went through, paths to the certificate and chain files will be printed out.
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+   /etc/letsencrypt/live/erp.computingforgeeks.com/fullchain.pem
+   Your key file has been saved at:
+   /etc/letsencrypt/live/erp.computingforgeeks.com/privkey.pem
+   Your cert will expire on 2020-01-17. To obtain a new or tweaked
+   version of this certificate in the future, simply run certbot-auto
+   again. To non-interactively renew *all* of your certificates, run
+   "certbot-auto renew"
+ - Your account credentials have been saved in your Certbot
+   configuration directory at /etc/letsencrypt. You should make a
+   secure backup of this folder now. This configuration directory will
+   also contain certificates and private keys obtained by Certbot so
+   making regular backups of this folder is ideal.
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+Create cron to renew certificate.
+
+$ sudo crontab -e
+15 3 * * * /usr/bin/certbot renew --pre-hook "systemctl stop nginx" --post-hook "systemctl start nginx"
+Create Nginx configuration file.
+
+sudo vim /etc/nginx/conf.d/odoo.conf
+Modify below and add to file.
+
+# Odoo Upstreams
+upstream odooserver {
+ server 127.0.0.1:8069;
+}
+
+# http to https redirection
+server {
+    listen 80;
+    server_name erp.computingforgeeks.com;
+    return 301 https://erp.computingforgeeks.com$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name erp.computingforgeeks.com;
+    access_log /var/log/nginx/odoo_access.log;
+    error_log /var/log/nginx/odoo_error.log;
+   
+   # SSL
+    ssl_certificate /etc/letsencrypt/live/erp.computingforgeeks.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/erp.computingforgeeks.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/erp.computingforgeeks.com/chain.pem;
+
+
+    # Proxy settings
+    proxy_read_timeout 720s;
+    proxy_connect_timeout 720s;
+    proxy_send_timeout 720s;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+
+    # Request for root domain
+    location / {
+       proxy_redirect off;
+       proxy_pass http://odooserver;
+    }
+
+    # Cache static files
+    location ~* /web/static/ {
+        proxy_cache_valid 200 90m;
+        proxy_buffering on;
+        expires 864000;
+        proxy_pass http://odooserver;
+    }
+
+    # Gzip Compression
+    gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;
+    gzip on;
+}
+Don’t forget to substitute erp.computingforgeeks.com with your domain name.
+
+Restart Nginx.
+
+sudo systemctl restart nginx
+Step 6: Access Odoo Web interface
+Access Odoo Web page on your domain name from a web browser.
