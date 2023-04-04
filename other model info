@@ -1,0 +1,120 @@
+#### this model is from medium article with below link:
+https://medium.com/@othmane.ghandi/running-odoo-in-https-using-nginx-certbot-90ef2f3e5ccb
+
+
+Running Odoo in HTTPS using Nginx & Certbot
+
+Odoo in https using nginx and certbot
+Normally you can run your odoo server with any open port inside your server, you just need to specify it in your Odoo Config (by default is 8069). In this case, we are talking about http
+
+Our concern is to add the “s” letter (stands for security) at the end of http (HTTPS) => you need to use the 443 port
+
+Okey ! why we don’t just specify 443 port inside Odoo config ? and we get the connection.
+
+
+Thinking smart
+The https is not about the port number (even if it’s the conventional port to use for this kind of communication) but more importantly the secure layer that is used on top of it, which give more protection to your data and communication. That’s why we use a web server like Nginx
+
+Why we use Nginx ?
+We are using here Nginx for many reasons:
+
+1/ Nginx and the other web servers comes to implement the ssl layer, secure the communication, manage the data traffic and optimize performances. Is like a traffic cop
+
+
+Traffic cop
+2/ Is an open source Web server (there is a paid version named Nginx plus)
+
+3/ Nginx has a good score in the benchmarks measuring the web server performances
+
+4/ Many people in Odoo community use it.
+
+5/ This is my article, I can choose the tool :D
+
+Install & setup Nginx in an ubuntu server :
+To install Nginx in ubuntu server is very easy, you just need to execute these commands:
+
+#> sudo apt update
+#> sudo apt install nginx
+Once the installation finished, you can check its status by using this command:
+
+#> sudo systemctl status nginx
+
+You can check your installation by opening http://your_ip_address or localhost in your browser
+
+For more information you can refer to this good tutorial
+
+Run Odoo with Nginx :
+After installing Nginx you need to have an SSL certificate.
+
+There is many Certificate Authorities (CA) that afford different type of SSL certificates. In our case we will use an open source one, afforded by Let’s Encrypt (free and open certificate authority)
+
+1/ Install certbot :
+
+#> sudo apt update
+#> sudo apt install certbot
+2/ Generate Strong Dh (Diffie-Hellman) Group:
+
+#> sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+3/ Map .well-known/acme-challenge to /var/lib/letsencrypt Directory:
+
+#> sudo mkdir -p /var/lib/letsencrypt/.well-known
+#> sudo chgrp www-data /var/lib/letsencrypt
+#> sudo chmod g+s /var/lib/letsencrypt
+we can use an Nginx snippet for the mapping and use later in our files
+
+#> sudo nano /etc/nginx/snippets/letsencrypt.conf
+
+4/ Create a second snippet ssl.conf which includes the chippers:
+
+#> sudo nano /etc/nginx/snippets/ssl.conf
+
+5/ Create your domain nginx bloc:
+
+sudo nano /etc/nginx/sites-available/your_domain.conf
+Add this code inside
+
+server {
+  listen 80;
+  server_name your.com www.your_domain.com;
+
+  include snippets/letsencrypt.conf;
+}
+6/ Create a symbolic link of your file to sites-enabled folder:
+
+sudo ln -s /etc/nginx/sites-available/your_domain.conf /etc/nginx/sites-enabled/
+sudo systemctl restart nginx
+
+Obtain an SSL certificate by running Certbot:
+
+sudo certbot certonly --agree-tos --email test@example.com --webroot -w /var/lib/letsencrypt/ -d your_domain.com -d www.your_domain.com
+Now that you have the certificate files, you can edit your domain server block /etc/nginx/sites-available/your_domain.conf as follows:
+
+
+NB: You need to change the 8069 port by the port that you are using & your_domain.com by your real domain
+
+Restart Nginx :
+
+sudo systemctl restart nginx
+Useful Tips about Nginx & Odoo :
+1/ In your Odoo config file you need to enable the proxy mode by adding : proxy_mode = True
+
+2/ Enable the multi-processing mode by extending your Odoo config file:
+
+limit_memory_hard = 1677721600
+limit_memory_soft = 629145600
+limit_request = 8192
+limit_time_cpu = 600
+limit_time_real = 1200
+max_cron_threads = 1
+workers = 8
+You can check the official page to know how do we get these numbers
+
+3/ Normally Nginx allow 1 MB of transfer/upload but you can increase it by adding inside /etc/nginx/nginx.conf:
+
+http {
+    ...
+    client_max_body_size XX M;
+}
+Change XX by the size you want. Upload size can be a blocker when you try to add attatchments in Odoo greater then 1MB
+
+4/ Change the default HTML error_page with a personal one:
