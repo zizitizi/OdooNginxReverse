@@ -1,5 +1,4 @@
-#### this model is from medium article with below link:
-https://medium.com/@othmane.ghandi/running-odoo-in-https-using-nginx-certbot-90ef2f3e5ccb
+#### this model is 2 model i accept :
 
 
 Running Odoo in HTTPS using Nginx & Certbot
@@ -118,3 +117,97 @@ http {
 Change XX by the size you want. Upload size can be a blocker when you try to add attatchments in Odoo greater then 1MB
 
 4/ Change the default HTML error_page with a personal one:
+
+
+
+
+refrence:
+https://medium.com/@othmane.ghandi/running-odoo-in-https-using-nginx-certbot-90ef2f3e5ccb
+
+
+
+
+other from odoo comunity:
+10
+Avatar
+Daniel Reis
+25 septembre 2013
+Meilleure réponse
+I am using nginx as a reverse proxy for HTTPS. I did see your error message while getting to the right configuration.
+
+Here is may config, replace myopenerp.example.com by your server address:
+
+## Based on: http://www.schenkels.nl/2013/01/reverse-ssl-proxy-using-nginx-with-openerp-v7/
+
+## OpenERP backend ##
+upstream openerp {
+    server 127.0.0.1:8069;
+}
+
+## https site##
+server {
+    listen      443 default;
+    server_name myopenerp.example.com;
+    root        /usr/share/nginx/html;
+    index       index.html index.htm;
+
+    # log files
+    access_log  /var/log/nginx/openerp.access.log;
+    error_log   /var/log/nginx/openerp.error.log;
+
+    # ssl files
+    ssl on;
+    ssl_certificate     /etc/ssl/nginx/server.crt;
+    ssl_certificate_key /etc/ssl/nginx/server.key;
+    keepalive_timeout   60;
+
+    # limit ciphers
+    ssl_ciphers             HIGH:!ADH:!MD5;
+    ssl_protocols           SSLv3 TLSv1;
+    ssl_prefer_server_ciphers on;
+
+    # proxy buffers
+    proxy_buffers 16 64k;
+    proxy_buffer_size 128k;
+
+    ## default location ##
+    location / {
+        proxy_pass  http://openerp;
+        # force timeouts if the backend dies
+        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+        proxy_redirect off;
+
+        # set headers
+        proxy_set_header    Host            $host;
+        proxy_set_header    X-Real-IP       $remote_addr;
+        proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header    X-Forwarded-Proto https;
+    }
+
+    # cache some static data in memory for 60mins
+    location ~* /web/static/ {
+        proxy_cache_valid 200 60m;
+        proxy_buffering on;
+        expires 864000;
+        proxy_pass http://openerp;
+    }
+}
+
+## http redirects to https ##
+server {
+    listen      80;
+    server_name myopenerp.example.com;
+
+    # Strict Transport Security
+    add_header Strict-Transport-Security max-age=2592000;
+    rewrite ^/.*$ https://$host$request_uri? permanent;
+}
+4 Commentaires
+Avatar
+Yenthe Van Ginneken (Mainframe Monkey)
+-
+13 février 2015
+Thanks Daniel, this works like a charm! Accepted the answer ;)
+
+refrence:
+https://www.odoo.com/fr_FR/forum/aide-1/nginx-reverse-proxy-on-80-443-32052
