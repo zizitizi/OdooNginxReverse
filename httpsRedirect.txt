@@ -1,7 +1,7 @@
 # Using Let’s Encrypt SSL Certificate for Odoo on Nginx
 
 
-## this model that i used , also other model is available too.
+## this model that i used , also other model is available too. 
 
 
 Install certbot tool:
@@ -109,3 +109,9 @@ Restart Nginx.
 sudo systemctl restart nginx
 Step 6: Access Odoo Web interface
 Access Odoo Web page on your domain name from a web browser.
+
+
+
+refrence:
+
+https://computingforgeeks.com/install-odoo-ubuntu-focal-with-lets-encrypt-ssl/
