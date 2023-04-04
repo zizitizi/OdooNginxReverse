@@ -1,5 +1,9 @@
 # Using Let’s Encrypt SSL Certificate for Odoo on Nginx
 
+
+## this model that i used , also other model is available too.
+
+
 Install certbot tool:
 
 sudo apt-get update
