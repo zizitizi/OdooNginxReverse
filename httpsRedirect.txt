@@ -111,6 +111,9 @@ Step 6: Access Odoo Web interface
 Access Odoo Web page on your domain name from a web browser.
 
 
+maybe you need to wait for accept your request from.
+
+
 
 refrence:
 
